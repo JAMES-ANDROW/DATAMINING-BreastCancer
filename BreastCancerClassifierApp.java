@@ -1,3 +1,5 @@
+/* Intializa all libraries and ofc ang weka dataset thru wekajar file */
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.Random;
@@ -19,8 +21,8 @@ import weka.core.Instances;
 public class BreastCancerClassifierApp {
 
     /*
-     * Team name: [ENTER TEAM NAME]
-     * Members: [ENTER MEMBER 1], [ENTER MEMBER 2], [ENTER MEMBER 3]
+     * Team name: BABAD (BA+BAD)
+     * Members: Florence Elaine Soleño, Duane Ryann Montes], James Andrew Agustin
      */
     // Team default for interactive prediction model: J48 decision tree.
     // Users can choose a different model at runtime.
@@ -39,13 +41,13 @@ public class BreastCancerClassifierApp {
         String datasetPath = args.length > 0 ? args[0] : "breast-cancer.arff";
 
         try {
-            // Section: dataset loading
+            // Section 1: dataset loading
             Instances data = loadDataset(datasetPath);
 
-            // Section: class assignment
+            // Section 2: class assignment
             data.setClassIndex(data.numAttributes() - 1);
 
-            // Section: model creation
+            // Section 3: model creation
             Classifier[] classifiers = new Classifier[] {
                 new ZeroR(),
                 new OneR(),
@@ -70,13 +72,13 @@ public class BreastCancerClassifierApp {
             System.out.println("Class attribute: " + data.classAttribute().name());
             System.out.println("==============================================\n");
 
-            // Section: evaluation
-            // Section: output display
+            // Section 4: evaluation
+            // Section 5: output display
             for (int i = 0; i < classifiers.length; i++) {
                 evaluateAndPrint(classifierNames[i], classifiers[i], data);
             }
 
-            // Section: interactive prediction loop
+            // Section 6 : interactive prediction loop
             Scanner scanner = new Scanner(System.in);
             String selectedModelName = choosePredictionModel(scanner);
             Classifier predictionModel = buildPredictionModel(data, selectedModelName);
@@ -98,11 +100,12 @@ public class BreastCancerClassifierApp {
         Evaluation evaluation = new Evaluation(data);
         evaluation.crossValidateModel(classifier, data, 10, new Random(1));
 
-        System.out.println("----------------------------------------------");
-        System.out.println("Model: " + modelName);
-        System.out.println("----------------------------------------------");
-        System.out.println(evaluation.toSummaryString("Summary Results:\n", false));
-        System.out.printf("Accuracy (Correctly Classified): %.2f%%%n", evaluation.pctCorrect());
+        double correctlyClassified = evaluation.correct();
+        int totalInstances = data.numInstances();
+
+        System.out.println("==================================== Model: " + modelName + " ====================================");
+        System.out.printf("Correctly Classified Instances: %.0f / %d%n", correctlyClassified, totalInstances);
+        System.out.printf("Accuracy: %.2f%%%n", evaluation.pctCorrect());
         System.out.println("Confusion Matrix:");
         System.out.println(evaluation.toMatrixString());
         System.out.println();
@@ -131,7 +134,7 @@ public class BreastCancerClassifierApp {
                 return PREDICTION_MODEL_NAMES[index - 1];
             }
         } catch (NumberFormatException e) {
-            // Fall through to default.
+            // Back to default if wala selected model or invalid input.
         }
 
         System.out.println("Invalid choice. Using default model: " + DEFAULT_PREDICTION_MODEL_NAME);
@@ -169,20 +172,23 @@ public class BreastCancerClassifierApp {
 
     private static void runInteractivePredictionLoop(Instances data, Classifier predictionModel, String modelName, Scanner scanner) {
 
+        Classifier currentModel = predictionModel;
+        String currentModelName = modelName;
+
         System.out.println("==============================================");
         System.out.println("Interactive Prediction Phase");
-        System.out.println("Prediction model: " + modelName);
+        System.out.println("Prediction model: " + currentModelName);
         System.out.println("==============================================");
 
-        // Section: interactive prediction loop (loop control)
+        // Section 6: interactive prediction loop (loop control)
         boolean keepPredicting = true;
 
         while (keepPredicting) {
             try {
-            // Section: interactive prediction loop (input collection)
-            // Section: interactive prediction loop (prediction)
+            // Section 6-a: interactive prediction loop (input collection)
+            // Section 6-b: interactive prediction loop (prediction)
                 Instance userInstance = collectUserInstance(data, scanner);
-                double predictedIndex = predictionModel.classifyInstance(userInstance);
+                double predictedIndex = currentModel.classifyInstance(userInstance);
                 String predictedClass = data.classAttribute().value((int) predictedIndex);
 
                 System.out.println("Predicted class: " + predictedClass);
@@ -190,14 +196,28 @@ public class BreastCancerClassifierApp {
                 System.out.println("Could not make prediction: " + e.getMessage());
             }
 
-            // Section: interactive prediction loop (loop control)
-            System.out.print("Would you like to make another prediction? (yes/y or no/n): ");
+            // Section 6-c: interactive prediction loop (loop control)
+            System.out.print("Next action? (yes/y = predict again, change/c = switch model, no/n = exit): ");
             if (!scanner.hasNextLine()) {
                 System.out.println("\nNo more input detected. Ending program gracefully.");
                 break;
             }
             String answer = scanner.nextLine().trim().toLowerCase();
-            keepPredicting = answer.equals("yes") || answer.equals("y");
+
+            if (answer.equals("change") || answer.equals("c")) {
+                String selectedModelName = choosePredictionModel(scanner);
+                try {
+                    currentModel = buildPredictionModel(data, selectedModelName);
+                    currentModelName = selectedModelName;
+                    System.out.println("Switched to model: " + currentModelName);
+                } catch (Exception e) {
+                    System.out.println("Could not switch model: " + e.getMessage());
+                    System.out.println("Continuing with model: " + currentModelName);
+                }
+                keepPredicting = true;
+            } else {
+                keepPredicting = answer.equals("yes") || answer.equals("y");
+            }
         }
 
         System.out.println("Program ended. Thank you.");
