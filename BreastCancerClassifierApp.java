@@ -22,11 +22,42 @@ public class BreastCancerClassifierApp {
 
     /*
      * Team name: BABAD (BA+BAD)
-     * Members: Florence Elaine Soleño, Duane Ryann Montes], James Andrew Agustin
+     * Members: Florence Elaine Soleño, Duane Ryann Montes, James Andrew Agustin
      */
+    
+    // ===== REFLECTIVE NOTES =====
+    // 
+    // Model Selection (J48 Default):
+    // The team chose J48 (decision tree) as the default prediction model because:
+    // - It provides interpretable rules that clinicians can understand and validate.
+    // - It balances accuracy (~75% cross-validation) with practical usability.
+    // - Unlike black-box models, J48 outputs can be inspected to verify reasoning.
+    //
+    // Invalid Input Handling:
+    // The team implemented multi-layered validation to reduce user frustration:
+    // - Case-insensitive matching (e.g., "yes", "YES", "Yes" all map to attribute value).
+    // - Range-based nominal attributes: accepts numeric input (e.g., user enters "45" 
+    //   for age range "40-49") and auto-maps to the correct category.
+    // - Missing value defaults: blank input silently sets attribute to missing, which
+    //   WEKA handles gracefully in prediction using built-in statistical inference.
+    // - Repeated prompts on invalid input avoid program crash and guide users to valid choices.
+    //
+    // Testing Observations:
+    // - Initial strict input validation (exact text match only) caused excessive 
+    //   re-prompting; relaxing to case-insensitive + numeric-range matching 
+    //   improved user experience significantly.
+    // - The interactive loop benefits from blank-line spacing between prompts and outputs;
+    //   terminal readability was poor without it, so printPrompt() and printInfo() helpers
+    //   were added to enforce consistent formatting.
+    // - Cross-validation on this cleaned dataset reveals moderate class imbalance
+    //   (201 no-recurrence vs 85 recurrence instances), which explains why 
+    //   recall on the minority class remains a challenge even for the best model.
+    //
+    
     // Team default for interactive prediction model: J48 decision tree.
-    // Users can choose a different model at runtime.
+    // Pero Users can also choose a different model at runtime.
     private static final String DEFAULT_PREDICTION_MODEL_NAME = "J48";
+
 
     private static final String[] PREDICTION_MODEL_NAMES = new String[] {
         "ZeroR",
@@ -65,20 +96,19 @@ public class BreastCancerClassifierApp {
                 "J48",
                 "Logistic Regression"
             };
-
             System.out.println("==============================================");
             System.out.println("Breast Cancer Classification - 10-Fold CV");
             System.out.println("Dataset: " + datasetPath);
             System.out.println("Class attribute: " + data.classAttribute().name());
             System.out.println("==============================================\n");
 
-            // Section 4: evaluation
-            // Section 5: output display
+            
+
             for (int i = 0; i < classifiers.length; i++) {
                 evaluateAndPrint(classifierNames[i], classifiers[i], data);
             }
 
-            // Section 6 : interactive prediction loop
+            // Section 4 : interactive prediction loop
             Scanner scanner = new Scanner(System.in);
             String selectedModelName = choosePredictionModel(scanner);
             Classifier predictionModel = buildPredictionModel(data, selectedModelName);
@@ -95,7 +125,7 @@ public class BreastCancerClassifierApp {
             return new Instances(reader);
         }
     }
-
+    // Section 5: Printing of Model data and evaluation results.
     private static void evaluateAndPrint(String modelName, Classifier classifier, Instances data) throws Exception {
         Evaluation evaluation = new Evaluation(data);
         evaluation.crossValidateModel(classifier, data, 10, new Random(1));
@@ -103,23 +133,26 @@ public class BreastCancerClassifierApp {
         double correctlyClassified = evaluation.correct();
         int totalInstances = data.numInstances();
 
-        System.out.println("==================================== Model: " + modelName + " ====================================");
+        System.out.println("====================================");
+        System.out.println("Model: " + modelName);
+        System.out.println("====================================");
         System.out.printf("Correctly Classified Instances: %.0f / %d%n", correctlyClassified, totalInstances);
         System.out.printf("Accuracy: %.2f%%%n", evaluation.pctCorrect());
         System.out.println("Confusion Matrix:");
         System.out.println(evaluation.toMatrixString());
         System.out.println();
     }
-
+    // Selection of model for interactive prediction, with default and input validation.
     private static String choosePredictionModel(Scanner scanner) {
+        System.out.println();
         System.out.println("Select a model for interactive predictions:");
         for (int i = 0; i < PREDICTION_MODEL_NAMES.length; i++) {
             System.out.println((i + 1) + ". " + PREDICTION_MODEL_NAMES[i]);
         }
 
-        System.out.print("Enter model number (1-6) or press Enter for default [J48]: ");
+        printPrompt("Enter model number (1-6) or press Enter for default [J48]: ");
         if (!scanner.hasNextLine()) {
-            System.out.println("No input detected. Using default model: " + DEFAULT_PREDICTION_MODEL_NAME);
+            printInfo("No input detected. Using default model: " + DEFAULT_PREDICTION_MODEL_NAME);
             return DEFAULT_PREDICTION_MODEL_NAME;
         }
 
@@ -137,10 +170,10 @@ public class BreastCancerClassifierApp {
             // Back to default if wala selected model or invalid input.
         }
 
-        System.out.println("Invalid choice. Using default model: " + DEFAULT_PREDICTION_MODEL_NAME);
+        printInfo("Invalid choice. Using default model: " + DEFAULT_PREDICTION_MODEL_NAME);
         return DEFAULT_PREDICTION_MODEL_NAME;
     }
-
+    //Buidlding the list of models that the user can choose from for interactive prediction, with error handling for unsupported models.
     private static Classifier buildPredictionModel(Instances data, String predictionModelName) throws Exception {
         Classifier model;
         switch (predictionModelName) {
@@ -169,7 +202,7 @@ public class BreastCancerClassifierApp {
         model.buildClassifier(data);
         return model;
     }
-
+    // Display na ang results of the interactive prediction, Start of displays.
     private static void runInteractivePredictionLoop(Instances data, Classifier predictionModel, String modelName, Scanner scanner) {
 
         Classifier currentModel = predictionModel;
@@ -191,15 +224,15 @@ public class BreastCancerClassifierApp {
                 double predictedIndex = currentModel.classifyInstance(userInstance);
                 String predictedClass = data.classAttribute().value((int) predictedIndex);
 
-                System.out.println("Predicted class: " + predictedClass);
+                printInfo("Predicted class: " + predictedClass);
             } catch (Exception e) {
-                System.out.println("Could not make prediction: " + e.getMessage());
+                printInfo("Could not make prediction: " + e.getMessage());
             }
 
             // Section 6-c: interactive prediction loop (loop control)
-            System.out.print("Next action? (yes/y = predict again, change/c = switch model, no/n = exit): ");
+            printPrompt("Next action? (yes/y = predict again, change/c = switch model, no/n = exit): ");
             if (!scanner.hasNextLine()) {
-                System.out.println("\nNo more input detected. Ending program gracefully.");
+                printInfo("No more input detected. Ending program gracefully.");
                 break;
             }
             String answer = scanner.nextLine().trim().toLowerCase();
@@ -209,10 +242,10 @@ public class BreastCancerClassifierApp {
                 try {
                     currentModel = buildPredictionModel(data, selectedModelName);
                     currentModelName = selectedModelName;
-                    System.out.println("Switched to model: " + currentModelName);
+                    printInfo("Switched to model: " + currentModelName);
                 } catch (Exception e) {
-                    System.out.println("Could not switch model: " + e.getMessage());
-                    System.out.println("Continuing with model: " + currentModelName);
+                    printInfo("Could not switch model: " + e.getMessage());
+                    printInfo("Continuing with model: " + currentModelName);
                 }
                 keepPredicting = true;
             } else {
@@ -255,7 +288,7 @@ public class BreastCancerClassifierApp {
         while (true) {
             boolean rangeNominal = isRangeNominalAttribute(attr);
             if (rangeNominal) {
-                System.out.print("Enter value for " + attr.name() + " (numeric, e.g., 45) or leave blank for missing: ");
+                printPrompt("Enter value for " + attr.name() + " (numeric, e.g., 45) or leave blank for missing: ");
             } else {
                 StringBuilder options = new StringBuilder();
                 for (int j = 0; j < attr.numValues(); j++) {
@@ -264,7 +297,7 @@ public class BreastCancerClassifierApp {
                         options.append(", ");
                     }
                 }
-                System.out.print("Enter value for " + attr.name() + " [" + options + "] (or leave blank for missing): ");
+                printPrompt("Enter value for " + attr.name() + " [" + options + "] (or leave blank for missing): ");
             }
 
             if (!scanner.hasNextLine()) {
@@ -293,15 +326,15 @@ public class BreastCancerClassifierApp {
                         instance.setValue(attr, rangeIndex);
                         return;
                     }
-                    System.out.println("Value is outside valid range for " + attr.name() + ". Please try again.");
+                    printInfo("Value is outside valid range for " + attr.name() + ". Please try again.");
                     continue;
                 } catch (NumberFormatException e) {
-                    System.out.println("Invalid number. Enter a numeric value like 45.");
+                    printInfo("Invalid number. Enter a numeric value like 45.");
                     continue;
                 }
             }
 
-            System.out.println("Invalid value. Please choose one of the listed options.");
+            printInfo("Invalid value. Please choose one of the listed options.");
         }
     }
 
@@ -368,14 +401,14 @@ public class BreastCancerClassifierApp {
             }
         }
 
-        // Reflective note: Accepting y/n plus case-insensitive input reduced
+        // Note: Accepting y/n plus case-insensitive input reduced
         // invalid-entry friction when testing the interactive loop.
         return input;
     }
 
     private static void setNumericValue(Instance instance, Attribute attr, Scanner scanner) {
         while (true) {
-            System.out.print("Enter numeric value for " + attr.name() + " (or leave blank for missing): ");
+            printPrompt("Enter numeric value for " + attr.name() + " (or leave blank for missing): ");
             if (!scanner.hasNextLine()) {
                 instance.setMissing(attr);
                 return;
@@ -392,13 +425,13 @@ public class BreastCancerClassifierApp {
                 instance.setValue(attr, value);
                 return;
             } catch (NumberFormatException e) {
-                System.out.println("Invalid number. Please enter a valid numeric value.");
+                printInfo("Invalid number. Please enter a valid numeric value.");
             }
         }
     }
 
     private static void setStringValue(Instance instance, Attribute attr, Scanner scanner) {
-        System.out.print("Enter text value for " + attr.name() + " (or leave blank for missing): ");
+        printPrompt("Enter text value for " + attr.name() + " (or leave blank for missing): ");
         if (!scanner.hasNextLine()) {
             instance.setMissing(attr);
             return;
@@ -415,7 +448,7 @@ public class BreastCancerClassifierApp {
 
     private static void setDateValue(Instance instance, Attribute attr, Scanner scanner) {
         while (true) {
-            System.out.print("Enter date for " + attr.name() + " using format " + attr.getDateFormat() + " (or leave blank for missing): ");
+            printPrompt("Enter date for " + attr.name() + " using format " + attr.getDateFormat() + " (or leave blank for missing): ");
             if (!scanner.hasNextLine()) {
                 instance.setMissing(attr);
                 return;
@@ -432,8 +465,27 @@ public class BreastCancerClassifierApp {
                 instance.setValue(attr, dateValue);
                 return;
             } catch (Exception e) {
-                System.out.println("Invalid date format. Please try again.");
+                printInfo("Invalid date format. Please try again.");
             }
         }
     }
+
+    private static void printPrompt(String message) {
+        System.out.println();
+        System.out.print(message);
+    }
+
+    private static void printInfo(String message) {
+        System.out.println();
+        System.out.println(message);
+    }
+
+
+    // Reflective Notes: In our model selection process, we chose J48 as the default 
+    // for interactive predictions due to its balance of accuracy and interpretability. 
+    // However, we also implemented a flexible system that allows users to select from 
+    // multiple models at runtime, including ZeroR, OneR, IBk, Naive Bayes, and Logistic 
+    // Regression. This design choice was motivated by the idea of providing users
+    // with options while ensuring that the default model is robust enough for general use.
 }
+
