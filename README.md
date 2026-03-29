@@ -24,7 +24,7 @@ For the interactive prediction phase, the program first lets the user choose whi
 
 Team default is **J48** if the user presses Enter or enters an invalid option.
 
-This default choice is stated in source comments in `BreastCancerClassifierApp.java` and here in the README.
+This default choice is stated in source comments in `BABAD_BrestCancerClassifierApp.java` and here in the README.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ This default choice is stated in source comments in `BreastCancerClassifierApp.j
 ## Compile
 
 ```bash
-javac --release 8 -cp ".;weka.jar" BreastCancerClassifierApp.java
+javac --release 8 -cp ".;weka.jar" BABAD_BrestCancerClassifierApp.java
 ```
 
 (Replace `weka.jar` with your actual WEKA jar filename/path.)
@@ -45,13 +45,20 @@ If your `javac` and `java` are already the same modern version, you can omit `--
 ## Run
 
 ```bash
-java -cp ".;weka.jar" BreastCancerClassifierApp
+java -cp ".;weka.jar" BABAD_BrestCancerClassifierApp
 ```
 
 Or with a custom dataset path:
 
 ```bash
-java -cp ".;weka.jar" BreastCancerClassifierApp path\\to\\breast-cancer.arff
+java -cp ".;weka.jar" BABAD_BrestCancerClassifierApp path\\to\\breast-cancer.arff
+```
+
+## Quick Run (Windows PowerShell)
+
+```powershell
+javac --release 8 -cp ".;weka-stable-3.8.x.jar" BABAD_BrestCancerClassifierApp.java
+java -cp ".;weka-stable-3.8.x.jar" BABAD_BrestCancerClassifierApp
 ```
 
 ## Output Behavior
