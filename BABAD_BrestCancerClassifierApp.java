@@ -18,42 +18,12 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
-public class BreastCancerClassifierApp {
+public class BABAD_BrestCancerClassifierApp {
 
     /*
      * Team name: BABAD (BA+BAD)
      * Members: Florence Elaine Soleño, Duane Ryann Montes, James Andrew Agustin
      */
-    
-    // ===== REFLECTIVE NOTES =====
-    // 
-    // Model Selection (J48 Default):
-    // The team chose J48 (decision tree) as the default prediction model because:
-    // - It provides interpretable rules that clinicians can understand and validate.
-    // - It balances accuracy (~75% cross-validation) with practical usability.
-    // - Unlike black-box models, J48 outputs can be inspected to verify reasoning.
-    //
-    // Invalid Input Handling:
-    // The team implemented multi-layered validation to reduce user frustration:
-    // - Case-insensitive matching (e.g., "yes", "YES", "Yes" all map to attribute value).
-    // - Range-based nominal attributes: accepts numeric input (e.g., user enters "45" 
-    //   for age range "40-49") and auto-maps to the correct category.
-    // - Missing value defaults: blank input silently sets attribute to missing, which
-    //   WEKA handles gracefully in prediction using built-in statistical inference.
-    // - Repeated prompts on invalid input avoid program crash and guide users to valid choices.
-    //
-    // Testing Observations:
-    // - Initial strict input validation (exact text match only) caused excessive 
-    //   re-prompting; relaxing to case-insensitive + numeric-range matching 
-    //   improved user experience significantly.
-    // - The interactive loop benefits from blank-line spacing between prompts and outputs;
-    //   terminal readability was poor without it, so printPrompt() and printInfo() helpers
-    //   were added to enforce consistent formatting.
-    // - Cross-validation on this cleaned dataset reveals moderate class imbalance
-    //   (201 no-recurrence vs 85 recurrence instances), which explains why 
-    //   recall on the minority class remains a challenge even for the best model.
-    //
-    
     // Team default for interactive prediction model: J48 decision tree.
     // Pero Users can also choose a different model at runtime.
     private static final String DEFAULT_PREDICTION_MODEL_NAME = "J48";
